@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface IProductoRepository extends JpaRepository<Producto, Integer> {
 
-    @Query("SELECT p FROM Producto p JOIN FETCH p.usuario")
+    @Query(value = "SELECT p.* FROM productos p LEFT JOIN usuarios u ON p.usuario_id = u.id", nativeQuery = true)
     List<Producto> findAllWithUsuario();
 }
