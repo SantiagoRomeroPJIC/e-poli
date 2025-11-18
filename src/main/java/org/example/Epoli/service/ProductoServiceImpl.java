@@ -5,12 +5,11 @@ import org.example.Epoli.repository.IProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional // Esto mantiene la sesión de Hibernate abierta mientras se ejecuta cada método
+@Transactional
 public class ProductoServiceImpl implements IProductoService {
 
     @Autowired
@@ -38,7 +37,7 @@ public class ProductoServiceImpl implements IProductoService {
 
     @Override
     public List<Producto> findAll() {
-        // Usamos el método que hace JOIN FETCH
-        return productoRepository.findAllWithUsuario();
+
+        return productoRepository.findAll();
     }
 }
