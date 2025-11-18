@@ -18,6 +18,7 @@ import jakarta.persistence.*;
 
 
         @ManyToOne
+        @JoinColumn(name="id")
         private Usuario usuario;
 
         public Producto() {
