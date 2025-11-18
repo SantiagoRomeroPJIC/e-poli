@@ -16,6 +16,7 @@ import java.util.Date;
         private Double total;
 
         @ManyToOne
+        @JoinColumn(name = "usuario_id")
         private Usuario usuario;
 
         @OneToOne(mappedBy = "orden")

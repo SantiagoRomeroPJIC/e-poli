@@ -50,22 +50,46 @@ public class ProductoController {
     }
 
 
+//    @PostMapping("/save")
+//    public String save(Producto producto, MultipartFile file, HttpSession session) throws IOException {
+//        LOGGER.info("Se esta guardando el prodcuto {}", producto);
+//
+//
+//
+//        Usuario usuario = (Usuario) session.getAttribute("usuario");
+//
+//        if (producto.getId() == null) {
+//            String nombreImagen = uploadFileService.saveImage(file);
+//            producto.setImagen(nombreImagen);
+//        }
+//
+//
+//        productoService.save(producto);
+//        return "redirect:/productos";
+//
+//    }
+
     @PostMapping("/save")
     public String save(Producto producto, MultipartFile file, HttpSession session) throws IOException {
-        LOGGER.info("Se esta guardando el prodcuto {}", producto);
+        LOGGER.info("Se esta guardando el producto {}", producto);
 
-
-
-        Usuario u = new Usuario(1,"","","","","","","");
-        producto.setUsuario(u);
-
-        if (producto.getId()==null){ //cuando se crea un producto
-            String nombreImagen=uploadFileService.saveImage(file);
-            producto.setImagen(nombreImagen);
+        // ✅ TEMPORAL: Obtener cualquier usuario de la base de datos
+        Optional<Usuario> usuarioOpt = usuarioService.findById(1); // Usa el primer usuario
+        if (usuarioOpt.isPresent()) {
+            producto.setUsuario(usuarioOpt.get());
+        } else {
+            // Si no hay usuarios, crea uno temporal
+            Usuario usuarioTemp = new Usuario();
+            usuarioTemp.setId(1);
+            usuarioTemp.setNombre("Usuario Temporal");
+            usuarioTemp.setEmail("temp@ejemplo.com");
+            usuarioService.save(usuarioTemp);
+            producto.setUsuario(usuarioTemp);
         }
 
-        else{
-
+        if (producto.getId() == null) {
+            String nombreImagen = uploadFileService.saveImage(file);
+            producto.setImagen(nombreImagen);
         }
 
         productoService.save(producto);
@@ -84,11 +108,24 @@ public class ProductoController {
     }
 
     @PostMapping("/update")
-    public String update(Producto producto,  MultipartFile file) throws IOException {
+    public String update(Producto producto, MultipartFile file, HttpSession session) throws IOException {
+        // ✅ Obtener usuario de sesión para consistencia
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) {
+            return "redirect:/usuario/login";
+        }
 
-        Producto p=new Producto();
-        p=productoService.get(producto.getId()).get();
-        producto.setUsuario(p.getUsuario());
+        Producto p = productoService.get(producto.getId()).get();
+        producto.setUsuario(p.getUsuario()); // Mantener el usuario original
+
+        // Si subes nueva imagen
+        if (file != null && !file.isEmpty()) {
+            String nombreImagen = uploadFileService.saveImage(file);
+            producto.setImagen(nombreImagen);
+        } else {
+            producto.setImagen(p.getImagen()); // Mantener imagen existente
+        }
+
         productoService.update(producto);
         return "redirect:/productos";
     }
@@ -118,7 +155,13 @@ public class ProductoController {
     }
 
     @PostMapping("/upload")
-    public String subirCsv(@RequestParam("file") MultipartFile file, Model model) {
+    public String subirCsv(@RequestParam("file") MultipartFile file, Model model, HttpSession session) {
+        // ✅ CORREGIDO: Obtener usuario de la sesión
+        Usuario usuario = (Usuario) session.getAttribute("usuario");
+        if (usuario == null) {
+            return "redirect:/usuario/login";
+        }
+
         if (file.isEmpty()) {
             model.addAttribute("error", "El archivo está vacío");
             return "productos/show";
@@ -146,12 +189,10 @@ public class ProductoController {
                 p.setUbicacion(fields[2].trim());
                 p.setPrecio(Double.parseDouble(fields[3].trim()));
 
-
-                Usuario u = new Usuario(1,"","","","","","","");
-                p.setUsuario(u);
+                // ✅ CORREGIDO: Usar usuario real de sesión
+                p.setUsuario(usuario);
 
                 LOGGER.info("Guardando producto desde CSV: {}", p);
-
                 productoService.save(p);
             }
 

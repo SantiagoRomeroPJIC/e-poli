@@ -15,9 +15,11 @@ public class Detalleorden {
         private Double total;
 
         @OneToOne
+        @JoinColumn(name = "orden_id")
         private Orden orden;
 
         @ManyToOne
+        @JoinColumn(name = "producto_id")
         private Producto producto;
 
         public Detalleorden() {
